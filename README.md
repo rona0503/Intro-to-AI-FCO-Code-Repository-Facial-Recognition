@@ -1,3 +1,7 @@
+Here is the complete, updated `README.md`. 
+
+I have given `test_inference.py` its own dedicated section just like the live prototype, and removed the markdown code blocks so you can copy and paste this directly into your file.
+
 # From-Scratch Face Recognition Attendance System
 
 This repository contains the code for a custom Face Recognition Attendance System. The system is built entirely from scratch (random weight initialization, no pre-trained models). It uses a custom Convolutional Neural Network (CNN) trained with **ArcFace Loss**, and uses **Cosine Similarity** for local identification and unknown-face rejection.
@@ -5,11 +9,13 @@ This repository contains the code for a custom Face Recognition Attendance Syste
 ## 📂 Project Structure
 
 ```text
-├── train_model.ipynb             # Notebook for training the model from scratch (Kaggle)
-├── test_inference.py             # Script for local enrollment, evaluation, and attendance logging
-├── arcface_public_trained_cnn.pth# Final trained PyTorch weights (Included in repo)
-├── README.md                     # Project documentation
-└── TRAINING PICS/                # Local directory for user enrollment
+├── train_model.ipynb                     # Notebook for training the model from scratch (Kaggle)
+├── test_inference.py                     # Script for automated local evaluation (Leave-one-out)
+├── prototype_Facial_Attendance_System.py # Live webcam attendance & auto-enrollment script
+├── arcface_public_trained_cnn.pth        # Final trained PyTorch weights (Included in repo)
+├── attendance.csv                        # Generated log file for attendance tracking
+├── README.md                             # Project documentation
+└── TRAINING PICS/                        # Local directory for user enrollment
     ├── Akira/
     ├── Emman/
     ├── Louie/
@@ -30,14 +36,15 @@ This repository contains the code for a custom Face Recognition Attendance Syste
 
 ## 🛠️ Environment Setup
 
-To run the inference script locally, install the required Python libraries:
+To run the scripts locally, install the required Python libraries:
 
 ```bash
 pip install torch torchvision torchaudio
 pip install facenet-pytorch
 pip install pillow pillow-heif numpy
+pip install opencv-python keyboard
 ```
-*(Note: `pillow-heif` is required to process Apple `.HEIC` images).*
+*(Note: `pillow-heif` is required to process Apple `.HEIC` images. `opencv-python` and `keyboard` are required for the live camera prototype).*
 
 ---
 
@@ -48,10 +55,8 @@ If you want to test the system immediately without re-training the model, the pr
 
 1. Clone this repository.
 2. Ensure the `TRAINING PICS` folder contains the images you want to test.
-3. Run the script:
-```bash
-python test_inference.py
-```
+3. To run the automated evaluation, run: `python test_inference.py`
+4. To run the live webcam attendance prototype, run: `python prototype_Facial_Attendance_System.py`
 
 ### Option 2: Full Reproduction (Training from Scratch)
 Because training a CNN from scratch requires significant compute, this is done on a free Kaggle GPU.
@@ -64,14 +69,34 @@ Because training a CNN from scratch requires significant compute, this is done o
 5. Download the final `arcface_public_trained_cnn.pth` file from the Kaggle output directory and place it in the root of your local project.
 
 **Phase 2: Local Evaluation**
-1. Place `arcface_public_trained_cnn.pth`, `test_inference.py`, and the `TRAINING PICS` folder in the same local directory.
-2. Run `python test_inference.py`.
+1. Place `arcface_public_trained_cnn.pth`, the Python scripts, and the `TRAINING PICS` folder in the same local directory.
+2. Run the desired script.
 
-**Execution Logic:**
-*   The script utilizes MTCNN to detect and align faces.
-*   **Leave-One-Out Evaluation:** For each person's folder, it automatically holds out the last image for testing.
-*   **Enrollment:** It extracts 128-D embeddings for the remaining images, averages them into a single prototype vector, and L2-normalizes it.
-*   **Inference:** It calculates the Cosine Similarity between the held-out image and all prototypes. If the highest similarity exceeds the `threshold` (default `0.65`), attendance is logged; otherwise, it returns "Unknown".
+---
+
+## 🧪 Automated Test Script (`test_inference.py`)
+
+This script is designed specifically for benchmarking and generating results for academic evaluation. It performs a strict **Leave-One-Out cross-validation** to ensure the model is not just memorizing training data.
+
+*   **Leave-One-Out Evaluation:** For each person's folder, it automatically holds out the last image for testing and ignores it during the enrollment phase.
+*   **Enrollment:** It extracts 128-D embeddings for the remaining images in the folder, averages them into a single prototype vector, and L2-normalizes it.
+*   **Inference:** It calculates the Cosine Similarity between the held-out image and all prototypes. If the highest similarity exceeds the `threshold` (default `0.65`), it counts as a correct match.
+*   **Output:** Generates a formatted terminal table showing the true identity, test image filename, predicted identity, similarity score, and the final overall accuracy percentage.
+
+---
+
+## 🎥 Live Camera Prototype (`prototype_Facial_Attendance_System.py`)
+
+This script opens your default webcam and provides real-time attendance tracking. Unlike the test script, it uses **all** available images in the `TRAINING PICS` folder to build the strongest possible facial profiles for live use.
+
+*   **Global Hotkeys:** Works reliably without needing to click the window.
+    *   `q`: Quit the application.
+    *   `s`: Save a snapshot of a recognized face to instantly update their database profile.
+    *   `e`: Enroll an unknown face.
+*   **Auto-Enrollment:** When an unknown face is detected, press `e`. The system will recommend the closest matching identity (if any). You can type a new name to create a folder in `TRAINING PICS` and save the 112x112 cropped face instantly.
+*   **Live Memory Update:** When you press `s` to save a snapshot, the system calculates the new running average immediately in RAM, so the model gets smarter instantly without needing a restart.
+*   **Smart Cooldown:** To prevent spamming the CSV, the 30-second cooldown timer only starts after the person leaves the camera frame.
+*   **CSV Logging:** Attendance is logged in `attendance.csv` with the format: `Timestamp, Name`.
 
 ---
 
