@@ -1,7 +1,3 @@
-Here is the complete, updated `README.md`. 
-
-I have given `test_inference.py` its own dedicated section just like the live prototype, and removed the markdown code blocks so you can copy and paste this directly into your file.
-
 # From-Scratch Face Recognition Attendance System
 
 This repository contains the code for a custom Face Recognition Attendance System. The system is built entirely from scratch (random weight initialization, no pre-trained models). It uses a custom Convolutional Neural Network (CNN) trained with **ArcFace Loss**, and uses **Cosine Similarity** for local identification and unknown-face rejection.
